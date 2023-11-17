@@ -1,12 +1,11 @@
 # syntax=docker/dockerfile:1
-FROM golang:1.20-alpine AS base
+ARG GO_VERSION=1.20
+FROM golang:${GO_VERSION}-alpine AS base
 WORKDIR /src
-# COPY go.mod go.sum /
 RUN --mount=type=cache,target=/go/pkg/mod/ \
     --mount=type=bind,source=go.sum,target=go.sum \
     --mount=type=bind,source=go.mod,target=go.mod \
     go mod download -x
-# COPY . .
 
 FROM base AS build-client
 RUN --mount=type=cache,target=/go/pkg/mod/ \
@@ -27,16 +26,5 @@ COPY --from=build-server /bin/server /bin/
 ENTRYPOINT [ "/bin/server" ]
 
 
-# clear build cache to see exactly what the build is doing:
-# (warning build command will be slow after clear cache since it have to redownload)
-# docker builder prune -af
-
-# build client image and log to file:
-# docker build --target=client --progress=plain . 2> log1.txt
-
-# run go command in a golang image to update package version
-# docker run -v $PWD:$PWD -w $PWD golang:1.21-alpine \
-#   go get github.com/go-chi/chi/v5@v5.0.8
-
-# rebuild client image and log to file:
-# docker build --target=client --progress=plain . 2> log2.txt
+# try setting different version:
+# docker build --target=client --build-arg="GO_VERSION=1.19" .
