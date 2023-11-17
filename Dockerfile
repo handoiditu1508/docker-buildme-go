@@ -6,3 +6,15 @@ RUN go mod download
 RUN go build -o /bin/client ./cmd/client
 RUN go build -o /bin/server ./cmd/server
 ENTRYPOINT [ "/bin/server" ]
+
+# build image:
+# docker build --tag=buildme .
+
+# run container from image in detached mode:
+# docker run --name=buildme --rm --detach buildme
+
+# invoke client library:
+# docker exec -it buildme /bin/client
+
+# stop container:
+# docker stop buildme
