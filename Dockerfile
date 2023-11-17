@@ -11,22 +11,27 @@ RUN go build -o /bin/client ./cmd/client
 FROM base AS build-server
 RUN go build -o /bin/server ./cmd/server
 
-FROM scratch
+FROM scratch as client
 COPY --from=build-client /bin/client /bin/
+ENTRYPOINT [ "/bin/client" ]
+
+FROM scratch as server
 COPY --from=build-server /bin/server /bin/
 ENTRYPOINT [ "/bin/server" ]
 
-# build image:
-# docker build --tag=buildme .
+# build client image:
+# docker build --tag=buildme-client --target=client .
 
-# check image's size:
-# docker images buildme
+# build server image:
+# docker build --tag=buildme-server --target=server .
 
-# run container from image in detached mode:
-# docker run --name=buildme --rm --detach buildme
+# check images's size:
+# docker images buildme*
 
-# invoke client library:
-# docker exec -it buildme /bin/client
+# run containers from images in detached mode (currently not working):
+# docker run --name=buildme-server --rm --detach buildme-server
+# docker run --name=buildme-client --rm -it buildme-client
 
-# stop container:
-# docker stop buildme
+# stop containers:
+# docker stop buildme-client
+# docker stop buildme-server
