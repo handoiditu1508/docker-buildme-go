@@ -13,9 +13,10 @@ RUN --mount=type=cache,target=/go/pkg/mod/ \
     go build -o /bin/client ./cmd/client
 
 FROM base AS build-server
+ARG APP_VERSION="v0.0.0+unknown"
 RUN --mount=type=cache,target=/go/pkg/mod/ \
     --mount=type=bind,target=. \
-    go build -o /bin/server ./cmd/server
+    go build -ldflags "-X main.version=${APP_VERSION}" -o /bin/server ./cmd/server
 
 FROM scratch as client
 COPY --from=build-client /bin/client /bin/
