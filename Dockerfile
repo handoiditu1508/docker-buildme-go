@@ -2,14 +2,17 @@
 FROM golang:1.20-alpine AS base
 WORKDIR /src
 COPY go.mod go.sum /
-RUN go mod download
+RUN --mount=type=cache,target=/go/pkg/mod/ \
+    go mod download -x
 COPY . .
 
 FROM base AS build-client
-RUN go build -o /bin/client ./cmd/client
+RUN --mount=type=cache,target=/go/pkg/mod/ \
+    go build -o /bin/client ./cmd/client
 
 FROM base AS build-server
-RUN go build -o /bin/server ./cmd/server
+RUN --mount=type=cache,target=/go/pkg/mod/ \
+    go build -o /bin/server ./cmd/server
 
 FROM scratch as client
 COPY --from=build-client /bin/client /bin/
@@ -19,19 +22,17 @@ FROM scratch as server
 COPY --from=build-server /bin/server /bin/
 ENTRYPOINT [ "/bin/server" ]
 
-# build client image:
-# docker build --tag=buildme-client --target=client .
 
-# build server image:
-# docker build --tag=buildme-server --target=server .
+# clear build cache to see exactly what the build is doing:
+# (warning build command will be slow after clear cache since it have to redownload)
+# docker builder prune -af
 
-# check images's size:
-# docker images buildme*
+# build client image and log to file:
+# docker build --target=client --progress=plain . 2> log1.txt
 
-# run containers from images in detached mode (currently not working):
-# docker run --name=buildme-server --rm --detach buildme-server
-# docker run --name=buildme-client --rm -it buildme-client
+# run go command in a golang image to update package version
+# docker run -v $PWD:$PWD -w $PWD golang:1.21-alpine \
+#   go get github.com/go-chi/chi/v5@v5.0.8
 
-# stop containers:
-# docker stop buildme-client
-# docker stop buildme-server
+# rebuild client image and log to file:
+# docker build --target=client --progress=plain . 2> log2.txt
