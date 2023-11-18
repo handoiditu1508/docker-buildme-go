@@ -26,9 +26,12 @@ FROM scratch as server
 COPY --from=build-server /bin/server /bin/
 ENTRYPOINT [ "/bin/server" ]
 
+FROM scratch AS binaries
+COPY --from=build-client /bin/client /
+COPY --from=build-server /bin/server /
 
-# export file from server target to working directory:
-# docker build --output=. --target=server .
+# export file from server & client targets to working directory:
+# docker build --output=bin --target=binaries .
 
 # check output folder
 # ls -l ./bin
