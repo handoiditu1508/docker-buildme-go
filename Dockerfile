@@ -36,5 +36,5 @@ WORKDIR /test
 RUN --mount=type=bind,target=. \
     golangci-lint run
 
-# run lint test:
-# docker build --target=lint .
+# builds the server image for the linux/arm/v7 platform:
+# docker build --target=server --platform=linux/arm/v7 .
