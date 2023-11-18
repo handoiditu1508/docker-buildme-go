@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 ARG GO_VERSION=1.20
 ARG GOLANGCI_LINT_VERSION=1.52
-FROM golang:${GO_VERSION}-alpine AS base
+FROM --platform=${BUILDPLATFORM} golang:${GO_VERSION}-alpine AS base
 WORKDIR /src
 RUN --mount=type=cache,target=/go/pkg/mod/ \
     --mount=type=bind,source=go.sum,target=go.sum \
@@ -9,15 +9,19 @@ RUN --mount=type=cache,target=/go/pkg/mod/ \
     go mod download -x
 
 FROM base AS build-client
+ARG TARGETOS
+ARG TARGETARCH
 RUN --mount=type=cache,target=/go/pkg/mod/ \
     --mount=type=bind,target=. \
-    go build -o /bin/client ./cmd/client
+    GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o /bin/client ./cmd/client
 
 FROM base AS build-server
+ARG TARGETOS
+ARG TARGETARCH
 ARG APP_VERSION="v0.0.0+unknown"
 RUN --mount=type=cache,target=/go/pkg/mod/ \
     --mount=type=bind,target=. \
-    go build -ldflags "-X main.version=${APP_VERSION}" -o /bin/server ./cmd/server
+    GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags "-X main.version=${APP_VERSION}" -o /bin/server ./cmd/server
 
 FROM scratch as client
 COPY --from=build-client /bin/client /bin/
@@ -45,9 +49,12 @@ RUN --mount=type=bind,target=. \
 # list available builders:
 # docker buildx ls
 
-# run multi-platform build
+# run multi-platform build using cross-compilation
 # docker buildx build \
 #     --target=binaries \
 #     --output=bin \
 #     --builder=container \
-#     --platform=linux/amd64,linux/arm64,linux/arm/v7 .
+#     --platform=darwin/arm64,windows/amd64,linux/amd64 .
+
+# remove builder (also can be remove in docker desktop 'containers' tab):
+# docker buildx rm container
