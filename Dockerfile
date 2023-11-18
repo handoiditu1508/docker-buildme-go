@@ -36,5 +36,18 @@ WORKDIR /test
 RUN --mount=type=bind,target=. \
     golangci-lint run
 
-# builds the server image for the linux/arm/v7 platform:
-# docker build --target=server --platform=linux/arm/v7 .
+# check Buildx is installed:
+# docker buildx version
+
+# create new builder that support concurrent multi-platform builds:
+# docker buildx create --driver=docker-container --name=container
+
+# list available builders:
+# docker buildx ls
+
+# run multi-platform build
+# docker buildx build \
+#     --target=binaries \
+#     --output=bin \
+#     --builder=container \
+#     --platform=linux/amd64,linux/arm64,linux/arm/v7 .
