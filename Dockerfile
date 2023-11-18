@@ -27,5 +27,8 @@ COPY --from=build-server /bin/server /bin/
 ENTRYPOINT [ "/bin/server" ]
 
 
-# try setting different version:
-# docker build --target=client --build-arg="GO_VERSION=1.19" .
+# export file from server target to working directory:
+# docker build --output=. --target=server .
+
+# check output folder
+# ls -l ./bin
